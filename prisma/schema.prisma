@@ -1,0 +1,60 @@
+// Prisma schema for xbox-teams
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../data/xbox-teams.db"
+}
+
+// 用户表
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      String   @default("user") // user, admin
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions    Session[]
+  activityLogs ActivityLog[]
+}
+
+// Xbox主机表
+model XboxHost {
+  id          String   @id @default(uuid())
+  name        String
+  ipAddress   String
+  macAddress  String?
+  status      String   @default("offline") // online, offline, in_use, error
+  currentUser String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions Session[]
+}
+
+// 游戏会话表
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  xboxHostId  String
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  status      String   @default("active") // active, ended, error
+  
+  user      User      @relation(fields: [userId], references: [id])
+  xboxHost  XboxHost  @relation(fields: [xboxHostId], references: [id])
+}
+
+// 活动日志
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
